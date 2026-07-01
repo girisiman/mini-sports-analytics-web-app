@@ -3,58 +3,69 @@
 #
 # PURPOSE
 # ----------------------------------------------------------
-# Unit tests for EDA module based on World Cup dataset.
-#
-# Ensures:
-# - EDA functions run without errors
-# - Required keys exist in outputs
-# - Data structure is valid
+# Test the Exploratory Data Analysis (EDA) module.
 #
 # ==========================================================
 
-import sys
 import os
+import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..")
+    )
+)
 
 from app.services.eda import run_eda
 
 
-# ----------------------------------------------------------
-# Test full EDA pipeline
-# ----------------------------------------------------------
+# ==========================================================
+# Test Complete EDA Pipeline
+# ==========================================================
+
 def test_run_eda():
+
     report = run_eda()
 
-    assert isinstance(report, dict), "EDA output must be a dictionary"
+    assert isinstance(report, dict)
 
-    # Core required sections
-    required_keys = [
+    required_sections = [
         "tournament_overview",
         "geography",
-        "matches_by_year",
-        "top_teams",
-        "stage_distribution"
+        "match_density",
+        "team_participation",
+        "time_based_insights"
     ]
 
-    for key in required_keys:
-        assert key in report, f"Missing key: {key}"
+    for section in required_sections:
 
-    print("\n✅ EDA TEST PASSED")
-    print("\n--- SAMPLE OUTPUT ---")
-    print(report)
+        assert section in report, f"Missing section: {section}"
+
+    print("\n========== EDA REPORT ==========\n")
+
+    for section, content in report.items():
+
+        print(section.upper())
+
+        print("-" * 40)
+
+        print(content)
+
+        print()
 
 
-# ----------------------------------------------------------
-# Run tests
-# ----------------------------------------------------------
+# ==========================================================
+# Main
+# ==========================================================
+
 if __name__ == "__main__":
-    print("\n==============================")
-    print(" RUNNING EDA TESTS")
-    print("==============================")
+
+    print("=" * 50)
+    print(" TESTING EDA MODULE ")
+    print("=" * 50)
 
     test_run_eda()
 
-    print("\n==============================")
-    print(" ALL EDA TESTS COMPLETED")
-    print("==============================")
+    print("=" * 50)
+    print(" ALL EDA TESTS PASSED ")
+    print("=" * 50)

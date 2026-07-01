@@ -3,81 +3,87 @@
 #
 # PURPOSE
 # ----------------------------------------------------------
-# Centralized dataset loading service using Config paths.
+# Centralized data loading service.
 #
-# Now supports scalable architecture:
-# - raw data
-# - processed data
-# - reusable loaders
+# This module provides reusable functions for loading and
+# previewing the FIFA World Cup dataset. Dataset locations
+# are managed through the application configuration to avoid
+# hardcoding file paths throughout the project.
+#
+# Students should learn:
+# • Centralized data loading
+# • Configuration-driven file management
+# • Reusable service modules
 #
 # ==========================================================
 
-import pandas as pd
 import os
+import pandas as pd
+
 from config import Config
 
 
-# ----------------------------------------------------------
-# Dataset file name (only change here if dataset changes)
-# ----------------------------------------------------------
-RAW_FILE_NAME = "raw_worldcup_matches.csv"
-
-
-# ----------------------------------------------------------
-# Function: get_raw_data_path
-# ----------------------------------------------------------
-def get_raw_data_path():
-    """
-    Returns full path to raw dataset using Config.
-    """
-
-    return os.path.join(
-        Config.RAW_DATA_FOLDER,
-        RAW_FILE_NAME
-    )
-
-
-# ----------------------------------------------------------
+# ==========================================================
 # Function: load_worldcup_data
-# ----------------------------------------------------------
+# ==========================================================
+
 def load_worldcup_data():
     """
-    Loads World Cup dataset from raw folder.
+    Load the raw FIFA World Cup dataset.
 
-    Returns:
-        pd.DataFrame
+    Returns
+    -------
+    pandas.DataFrame
+        Raw World Cup dataset.
     """
 
-    file_path = get_raw_data_path()
-
-    if not os.path.exists(file_path):
+    if not os.path.exists(Config.RAW_DATA_FILE):
         raise FileNotFoundError(
-            f"Dataset not found at: {file_path}"
+            f"Dataset not found:\n{Config.RAW_DATA_FILE}"
         )
 
-    df = pd.read_csv(file_path)
-
-    return df
+    return pd.read_csv(Config.RAW_DATA_FILE)
 
 
-# ----------------------------------------------------------
+# ==========================================================
 # Function: preview_data
-# ----------------------------------------------------------
+# ==========================================================
+
 def preview_data(n=5):
     """
-    Returns first n rows of dataset.
+    Display the first n rows of the dataset.
+
+    Parameters
+    ----------
+    n : int, default=5
+
+    Returns
+    -------
+    pandas.DataFrame
     """
 
     df = load_worldcup_data()
+
     return df.head(n)
 
 
-# ----------------------------------------------------------
+# ==========================================================
 # Function: dataset_summary
-# ----------------------------------------------------------
+# ==========================================================
+
 def dataset_summary():
     """
-    Returns dataset structure summary for EDA.
+    Generate a high-level summary of the dataset.
+
+    Returns
+    -------
+    dict
+        Dictionary containing:
+
+        - Shape
+        - Columns
+        - Data types
+        - Missing values
     """
 
     df = load_worldcup_data()
@@ -85,6 +91,6 @@ def dataset_summary():
     return {
         "shape": df.shape,
         "columns": list(df.columns),
-        "missing_values": df.isnull().sum().to_dict(),
-        "dtypes": df.dtypes.astype(str).to_dict()
+        "dtypes": df.dtypes.astype(str).to_dict(),
+        "missing_values": df.isnull().sum().to_dict()
     }

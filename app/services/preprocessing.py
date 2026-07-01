@@ -1,84 +1,175 @@
 # ==========================================================
-# FILE: preprocessing.py 
+# FILE: preprocessing.py
+#
+# PURPOSE
+# ----------------------------------------------------------
+# Performs preprocessing on the FIFA World Cup dataset.
+#
+# Responsibilities:
+#
+# • Load the raw dataset
+# • Handle missing values
+# • Remove duplicate records
+# • Standardize column names
+# • Convert data types
+# • Save the cleaned dataset
+#
+# The cleaned dataset is stored in:
+#
+#     data/processed/cleaned_world_cup_matches.csv
+#
+# Students should learn:
+#
+# ✓ Data cleaning workflow
+# ✓ Pandas preprocessing
+# ✓ Reusable preprocessing functions
+# ✓ Saving processed datasets
+#
 # ==========================================================
 
-import pandas as pd
 import os
+import pandas as pd
 
 from config import Config
-from app.services.data_loader import load_worldcup_data
 
 
-# ----------------------------------------------------------
-# Output file path
-# ----------------------------------------------------------
-PROCESSED_FILE_NAME = "cleaned_worldcup_matches.csv"
+# ==========================================================
+# Function: load_raw_data
+# ==========================================================
+
+def load_raw_data():
+    """
+    Load the raw World Cup dataset.
+
+    Returns
+    -------
+    pandas.DataFrame
+    """
+
+    if not os.path.exists(Config.RAW_DATA_FILE):
+        raise FileNotFoundError(
+            f"Raw dataset not found:\n{Config.RAW_DATA_FILE}"
+        )
+
+    return pd.read_csv(Config.RAW_DATA_FILE)
 
 
-def get_processed_path():
-    return os.path.join(
-        Config.PROCESSED_DATA_FOLDER,
-        PROCESSED_FILE_NAME
-    )
+# ==========================================================
+# Function: clean_dataset
+# ==========================================================
 
+def clean_dataset(df):
+    """
+    Perform basic preprocessing.
 
-# ----------------------------------------------------------
-# Cleaning steps
-# ----------------------------------------------------------
-def clean_column_names(df):
+    Parameters
+    ----------
+    df : pandas.DataFrame
+
+    Returns
+    -------
+    pandas.DataFrame
+    """
+
+    # ------------------------------------------------------
+    # Standardize column names
+    # ------------------------------------------------------
+
     df.columns = (
         df.columns
         .str.strip()
         .str.lower()
         .str.replace(" ", "_")
     )
+
+    # ------------------------------------------------------
+    # Remove duplicate rows
+    # ------------------------------------------------------
+
+    df = df.drop_duplicates()
+
+    # ------------------------------------------------------
+    # Remove rows with missing Year
+    # ------------------------------------------------------
+
+    df = df.dropna(subset=["year"])
+
+    # ------------------------------------------------------
+    # Convert year to integer
+    # ------------------------------------------------------
+
+    df["year"] = df["year"].astype(int)
+
     return df
 
 
-def handle_missing_values(df):
-    for col in df.columns:
-        if df[col].dtype == "object":
-            df[col] = df[col].fillna("unknown")
-        else:
-            df[col] = df[col].fillna(0)
-    return df
+# ==========================================================
+# Function: save_processed_data
+# ==========================================================
 
-
-# ----------------------------------------------------------
-# MAIN PIPELINE
-# ----------------------------------------------------------
-def preprocess_worldcup_data(save=True):
+def save_processed_data(df):
     """
-    Full preprocessing pipeline.
+    Save cleaned dataset.
 
-    If save=True → saves cleaned dataset to /data/processed
+    Parameters
+    ----------
+    df : pandas.DataFrame
+
+    Returns
+    -------
+    str
+        Output file path.
     """
 
-    df = load_worldcup_data()
+    df.to_csv(
+        Config.CLEANED_DATA_FILE,
+        index=False
+    )
 
-    # Step 1: clean columns
-    df = clean_column_names(df)
+    return Config.CLEANED_DATA_FILE
 
-    # Step 2: missing values
-    df = handle_missing_values(df)
 
-    # Step 3: save processed dataset
-    if save:
-        output_path = get_processed_path()
+# ==========================================================
+# Function: preprocess_worldcup_data
+# ==========================================================
 
-        # ensure folder exists
-        os.makedirs(Config.PROCESSED_DATA_FOLDER, exist_ok=True)
+def preprocess_worldcup_data():
+    """
+    Complete preprocessing pipeline.
 
-        df.to_csv(output_path, index=False)
+    Returns
+    -------
+    pandas.DataFrame
+        Cleaned dataset.
+    """
 
-        print(f"\n✅ Processed data saved at: {output_path}")
+    df = load_raw_data()
+
+    df = clean_dataset(df)
+
+    save_processed_data(df)
 
     return df
 
 
-# ----------------------------------------------------------
-# preview helper
-# ----------------------------------------------------------
-def preview_cleaned_data(n=5):
-    df = preprocess_worldcup_data(save=False)
-    return df.head(n)
+# ==========================================================
+# Function: preprocessing_summary
+# ==========================================================
+
+def preprocessing_summary():
+    """
+    Generate a preprocessing summary.
+
+    Returns
+    -------
+    dict
+    """
+
+    df = preprocess_worldcup_data()
+
+    return {
+        "shape": df.shape,
+        "columns": list(df.columns),
+        "missing_values": df.isnull().sum().to_dict(),
+        "duplicates": int(df.duplicated().sum())
+    }

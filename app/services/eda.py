@@ -1,93 +1,171 @@
 # ==========================================================
-# FILE: eda.py (DESIGNED AS PER DATASET)
+# FILE: eda.py
+#
+# PURPOSE
+# ----------------------------------------------------------
+# Performs Exploratory Data Analysis (EDA) on the cleaned
+# FIFA World Cup dataset.
+#
+# The goal of this module is to generate meaningful insights
+# that help understand the tournament structure before
+# building statistical models or visualizations.
+#
+# EDA MODULES
+#
+# 1. Tournament Overview
+# 2. Geography of Football
+# 3. Match Density Analysis
+# 4. Team Participation
+# 5. Time-based Insights
+#
+# Students should learn:
+#
+# ✓ Exploratory Data Analysis
+# ✓ Data aggregation
+# ✓ Frequency analysis
+# ✓ Grouping operations
+#
 # ==========================================================
 
-import pandas as pd
 import os
+import pandas as pd
+
 from config import Config
 
 
-FILE_NAME = "cleaned_worldcup_matches.csv"
+# ==========================================================
+# Load Processed Dataset
+# ==========================================================
+
+def load_processed_data():
+    """
+    Load the cleaned World Cup dataset.
+
+    Returns
+    -------
+    pandas.DataFrame
+    """
+
+    if not os.path.exists(Config.CLEANED_DATA_FILE):
+        raise FileNotFoundError(
+            f"Processed dataset not found:\n{Config.CLEANED_DATA_FILE}"
+        )
+
+    return pd.read_csv(Config.CLEANED_DATA_FILE)
 
 
-def load_data():
-    path = os.path.join(Config.PROCESSED_DATA_FOLDER, FILE_NAME)
+# ==========================================================
+# 1. Tournament Overview
+# ==========================================================
 
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Processed data not found at {path}")
-
-    return pd.read_csv(path)
-
-
-# ----------------------------------------------------------
-# 1. TOURNAMENT OVERVIEW
-# ----------------------------------------------------------
 def tournament_overview():
-    df = load_data()
+
+    df = load_processed_data()
 
     return {
         "total_matches": len(df),
-        "unique_years": df["year"].nunique(),
+        "total_tournaments": df["year"].nunique(),
         "unique_stadiums": df["stadium"].nunique(),
         "unique_cities": df["city"].nunique()
     }
 
 
-# ----------------------------------------------------------
-# 2. GEOGRAPHY ANALYSIS
-# ----------------------------------------------------------
-def geography_analysis():
-    df = load_data()
+# ==========================================================
+# 2. Geography of Football
+# ==========================================================
 
-    top_cities = df["city"].value_counts().head(5).to_dict()
-    top_stadiums = df["stadium"].value_counts().head(5).to_dict()
+def geography_analysis():
+
+    df = load_processed_data()
 
     return {
-        "top_cities": top_cities,
-        "top_stadiums": top_stadiums
+        "top_cities": df["city"].value_counts().head(5).to_dict(),
+        "top_stadiums": df["stadium"].value_counts().head(5).to_dict()
     }
 
 
-# ----------------------------------------------------------
-# 3. MATCH DISTRIBUTION BY YEAR
-# ----------------------------------------------------------
-def matches_by_year():
-    df = load_data()
+# ==========================================================
+# 3. Match Density Analysis
+# ==========================================================
 
-    return df["year"].value_counts().sort_index().to_dict()
+def match_density_analysis():
+
+    df = load_processed_data()
+
+    return {
+        "matches_per_year": (
+            df["year"]
+            .value_counts()
+            .sort_index()
+            .to_dict()
+        ),
+        "matches_per_stage": (
+            df["stage"]
+            .value_counts()
+            .to_dict()
+        )
+    }
 
 
-# ----------------------------------------------------------
-# 4. TEAM PARTICIPATION ANALYSIS
-# ----------------------------------------------------------
+# ==========================================================
+# 4. Team Participation
+# ==========================================================
+
 def team_participation():
-    df = load_data()
 
-    teams = pd.concat([
-        df["home_team_initials"],
-        df["away_team_initials"]
-    ])
+    df = load_processed_data()
 
-    return teams.value_counts().head(10).to_dict()
+    teams = pd.concat(
+        [
+            df["home_team_initials"],
+            df["away_team_initials"]
+        ]
+    )
+
+    appearances = teams.value_counts()
+
+    return {
+        "top_teams": appearances.head(10).to_dict(),
+        "all_team_appearances": appearances.to_dict()
+    }
 
 
-# ----------------------------------------------------------
-# 5. MATCH STAGE ANALYSIS
-# ----------------------------------------------------------
-def stage_analysis():
-    df = load_data()
+# ==========================================================
+# 5. Time-based Insights
+# ==========================================================
 
-    return df["stage"].value_counts().to_dict()
+def time_based_insights():
+
+    df = load_processed_data()
+
+    decade = (df["year"] // 10) * 10
+
+    return {
+        "matches_per_year": (
+            df["year"]
+            .value_counts()
+            .sort_index()
+            .to_dict()
+        ),
+        "matches_per_decade": (
+            decade
+            .value_counts()
+            .sort_index()
+            .to_dict()
+        )
+    }
 
 
-# ----------------------------------------------------------
-# FULL EDA REPORT
-# ----------------------------------------------------------
+# ==========================================================
+# Run Complete EDA
+# ==========================================================
+
 def run_eda():
+
     return {
         "tournament_overview": tournament_overview(),
         "geography": geography_analysis(),
-        "matches_by_year": matches_by_year(),
-        "top_teams": team_participation(),
-        "stage_distribution": stage_analysis()
+        "match_density": match_density_analysis(),
+        "team_participation": team_participation(),
+        "time_based_insights": time_based_insights()
     }
